@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墾丁大冒險：CP值保衛戰！</title>
+    <!-- 引入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* 淺藍灰色背景 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* 更圓潤的圓角 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* 更明顯的陰影 */
+            padding: 2.5rem;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0;
+            background-color: #e2e8f0; /* 淺灰色背景 */
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-item {
+            font-weight: 600;
+            color: #4a5568; /* 深灰色文字 */
+        }
+        .scenario-box {
+            background-color: #f7fafc; /* 接近白色的淺色背景 */
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #2d3748; /* 深色文字 */
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* 選項按鈕間距 */
+        }
+        .game-button {
+            background-color: #4299e1; /* 藍色按鈕 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+        }
+        .game-button:hover {
+            background-color: #3182ce; /* 藍色按鈕 hover */
+            transform: translateY(-2px);
+        }
+        .game-button:active {
+            transform: translateY(0);
+        }
+        .start-button {
+            background-color: #48bb78; /* 綠色開始按鈕 */
+            width: auto;
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+        }
+        .start-button:hover {
+            background-color: #38a169; /* 綠色開始按鈕 hover */
+        }
+        .result-message {
+            margin-top: 1.5rem;
+            font-size: 1.125rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">墾丁大冒險：CP值保衛戰！爆笑升級版！</h1>
+
+        <!-- 遊戲狀態顯示區塊 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">金錢：<span id="moneyValue">5000</span>元</div>
+            <div class="stat-item">心情值：<span id="moodValue">50</span></div>
+        </div>
+
+        <!-- 遊戲內容區塊 -->
+        <div id="gameContent">
+            <!-- 初始介紹畫面 -->
+            <div id="introScreen">
+                <p class="text-lg text-gray-700 mb-6">
+                    你期待已久的暑假終於來臨！看著新聞報導說墾丁訂房率創新低，業者哀嘆，但你卻心生一計：是不是能趁這個時候，用最划算的價格，玩遍墾丁，順便看看那些「哀嘆」的業者是不是真的在「裝可憐」？這將是一場關於「CP值」的旅程，你的每個選擇都將決定這趟墾丁大冒險是賺到笑翻，還是被當「盤子」笑不出來！
+                </p>
+                <button id="startButton" class="game-button start-button">開始你的爆笑墾丁之旅！</button>
+            </div>
+
+            <!-- 遊戲進行畫面 (預設隱藏) -->
+            <div id="gameScreen" class="hidden">
+                <div class="scenario-box">
+                    <p id="scenarioText" class="text-lg text-gray-800"></p>
+                    <p id="narrationText" class="text-base text-gray-600 mt-2"></p>
+                </div>
+                <div id="optionsContainer" class="options-container">
+                    <!-- 選項按鈕會動態生成於此 -->
+                </div>
+                <div id="resultText" class="result-message hidden"></div>
+            </div>
+
+            <!-- 遊戲結束畫面 (預設隱藏) -->
+            <div id="endScreen" class="hidden">
+                <p id="endMessage" class="text-xl font-semibold text-gray-900 mb-4"></p>
+                <p id="finalStats" class="text-lg text-gray-700 mb-6"></p>
+                <button id="restartButton" class="game-button start-button">再戰一次！</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態變數
+        let money = 5000; // 初始金錢
+        let mood = 50;    // 初始心情值
+        let currentScenario = 0; // 當前情境索引
+        let scenarios = []; // 儲存所有遊戲情境
+
+        // DOM 元素引用
+        const moneyValueSpan = document.getElementById('moneyValue');
+        const moodValueSpan = document.getElementById('moodValue');
+        const introScreen = document.getElementById('introScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const endScreen = document.getElementById('endScreen');
+        const startButton = document.getElementById('startButton');
+        const scenarioTextElem = document.getElementById('scenarioText');
+        const narrationTextElem = document.getElementById('narrationText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const resultTextElem = document.getElementById('resultText');
+        const endMessageElem = document.getElementById('endMessage');
+        const finalStatsElem = document.getElementById('finalStats');
+        const restartButton = document.getElementById('restartButton');
+
+        // 更新遊戲狀態顯示
+        function updateStats() {
+            moneyValueSpan.textContent = money;
+            moodValueSpan.textContent = mood;
+        }
+
+        // 定義遊戲情境
+        // 每個情境包含：
+        //   - scenario: 情境描述
+        //   - narration: 旁白或引導文字
+        //   - options: 選擇列表，每個選擇包含：
+        //     - text: 選項顯示文字
+        //     - moneyChange: 金錢變化
+        //     - moodChange: 心情值變化
+        //     - resultNarration: 選擇後的結果旁白
+        scenarios = [
+            {
+                scenario: '炎炎夏日，你決定前往墾丁。出發前，你打開訂房網站，看著琳瑯滿目的住宿選項，心想：「新聞說有打折，這次總不會被當盤子了吧？（天真）」',
+                narration: '新聞說墾丁房價有下調3-5%，但PTT網友說這根本沒差，建議要砍半才有感。你覺得呢？',
+                options: [
+                    {
+                        text: 'A. 選擇星級飯店（原價4000元，折扣後3800元）：相信業者說的CP值更高，畢竟「有錢就是任性，沒錢就是認命」！',
+                        moneyChange: -3800,
+                        moodChange: 10,
+                        resultNarration: '你住進了豪華飯店，躺在柔軟的大床上，感覺自己就是個貴族！但看著帳單，貴族的眼淚默默流了下來，錢包瞬間比非洲難民還瘦。'
+                    },
+                    {
+                        text: 'B. 選擇一般民宿（原價2000元，折扣後1900元）：想省點錢，找間評價還不錯的民宿就好，畢竟「住得好不如睡得飽」。',
+                        moneyChange: -1900,
+                        moodChange: 5,
+                        resultNarration: '民宿雖不如飯店奢華，但也算舒適，你感覺還算划算。至少不是睡在「海景第一排」的沙灘上，而且還有冷氣吹，夫復何求？'
+                    },
+                    {
+                        text: 'C. 選擇「超殺」背包客棧（一晚500元）：衝著便宜去，賭一把！反正「出來玩就是要體驗人生百態」！',
+                        moneyChange: -500,
+                        moodChange: -15,
+                        resultNarration: '雖然省下不少錢，但住宿品質讓你有點懷疑人生。你開始思考，是不是該把「CP值」改成「LP值」（老實說，盤子值）？'
+                    }
+                ]
+            },
+            {
+                scenario: '前往墾丁的路上，屏鵝公路測速照相多，讓許多人感到厭煩。你決定怎麼抵達這個充滿「驚喜」的地方？',
+                narration: '', // 情境2沒有額外旁白
+                options: [
+                    {
+                        text: 'A. 自己開車：圖個方便，想走就走，順便挑戰一下「閃避測速照相」的極限運動！',
+                        moneyChange: -500, // 油錢+可能被拍罰單的心理準備
+                        moodChange: 5,
+                        resultNarration: '雖然一路戰戰兢兢，眼睛比雷達還靈敏，但至少時間彈性。你感覺自己像個特務，隨時準備躲避「國家級攝影師」的偷拍。'
+                    },
+                    {
+                        text: 'B. 搭乘大眾運輸：高鐵轉客運，省去開車的麻煩，畢竟「花錢買清閒，值得！」',
+                        moneyChange: -800,
+                        moodChange: 10,
+                        resultNarration: '雖然花費較高，但你可以一路補眠，抵達後精神飽滿。看著窗外那些被測速照相嚇得半死的駕駛，你露出勝利的微笑。'
+                    }
+                ]
+            },
+            {
+                scenario: '夜晚降臨，墾丁大街的燈光閃爍，空氣中瀰漫著各種食物的香氣。但你也想起PTT網友對大街物價的抱怨，心裡響起警報：「小心！盤子出沒！」',
+                narration: '', // 情境3沒有額外旁白
+                options: [
+                    {
+                        text: 'A. 大膽嘗試大街特色小吃：點了幾樣看起來很不錯的滷味和海鮮，心想：「來都來了，不吃怎麼行！」',
+                        moneyChange: -700,
+                        moodChange: -20,
+                        resultNarration: '你嚐了當地美食，但價格讓你覺得自己像個被宰的肥羊，心情瞬間從天堂掉到地獄，甚至想直接打110報案。'
+                    },
+                    {
+                        text: 'B. 尋找巷弄裡評價好的餐廳：避開大街，找當地人推薦的店，畢竟「內行看門道，外行看熱鬧」。',
+                        moneyChange: -400,
+                        moodChange: 10,
+                        resultNarration: '你找到了一間CP值不錯的小店，食物美味，價格合理，感覺賺到了！你甚至想在PTT上發一篇「墾丁美食不踩雷」的攻略文，造福廣大鄉民。'
+                    },
+                    {
+                        text: 'C. 直接去便利商店解決：簡單吃飽就好，不跟盤子賭氣，畢竟「吃飽是王道，省錢是真理」。',
+                        moneyChange: -150,
+                        moodChange: 5,
+                        resultNarration: '雖然有點無聊，但至少保住了荷包，心情沒什麼波動。你坐在超商的座位上，看著大街上那些被「盤子價」嚇到的遊客，露出了一絲「幸災樂禍」的微笑。'
+                    }
+                ]
+            },
+            {
+                scenario: '來墾丁就是要玩水！各種水上活動讓你心癢癢，但你也知道，有些活動的價格可能讓你心臟病發。',
+                narration: '', // 情境4沒有額外旁白
+                options: [
+                    {
+                        text: 'A. 參加全套水上活動（浮潛、香蕉船、水上摩托車）：一次玩個夠！「錢乃身外之物，快樂才是永恆！」',
+                        moneyChange: -1000,
+                        moodChange: 15,
+                        resultNarration: '刺激又好玩！你玩得不亦樂乎，感覺整個人都放鬆了。雖然錢包又瘦了一圈，但你覺得這錢花得值得，畢竟「千金難買我樂意」！'
+                    },
+                    {
+                        text: 'B. 只選擇一項喜歡的活動：挑一個最想玩的，淺嚐即可，畢竟「見好就收，才是高手」。',
+                        moneyChange: -500,
+                        moodChange: 10,
+                        resultNarration: '玩得開心又沒有太大的負擔。你精明的選擇讓你既享受了樂趣，又沒有讓荷包大失血，簡直是CP值之王！'
+                    },
+                    {
+                        text: 'C. 在沙灘上享受日光浴，不下水：省錢，而且也不喜歡濕黏的感覺，畢竟「躺著也能賺錢，躺著也能玩」。',
+                        moneyChange: -0,
+                        moodChange: 5,
+                        resultNarration: '雖然沒玩水，但在沙灘上放空也挺舒服的。你甚至發現沙灘上的沙子比某些民宿的床還軟，心裡暗自竊喜自己又省了一筆！'
+                    }
+                ]
+            }
+        ];
+
+        // 顯示當前情境
+        function displayScenario() {
+            // 確保有下一個情境
+            if (currentScenario < scenarios.length) {
+                const scenarioData = scenarios[currentScenario];
+                scenarioTextElem.textContent = scenarioData.scenario;
+                narrationTextElem.textContent = scenarioData.narration; // 顯示旁白
+
+                optionsContainer.innerHTML = ''; // 清空舊選項
+                scenarioData.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.classList.add('game-button');
+                    button.textContent = option.text;
+                    button.onclick = () => chooseOption(option); // 綁定點擊事件
+                    optionsContainer.appendChild(button);
+                });
+                resultTextElem.classList.add('hidden'); // 隱藏結果文字
+            } else {
+                endGame(); // 如果沒有更多情境，結束遊戲
+            }
+        }
+
+        // 玩家選擇選項
+        function chooseOption(chosenOption) {
+            // 更新金錢和心情值
+            money += chosenOption.moneyChange;
+            mood += chosenOption.moodChange;
+
+            // 確保金錢不低於0，心情值在合理範圍
+            money = Math.max(0, money); // 金錢不能是負數
+            mood = Math.min(100, Math.max(0, mood)); // 心情值在0-100之間
+
+            updateStats(); // 更新顯示
+
+            // 顯示選擇後的旁白
+            resultTextElem.textContent = chosenOption.resultNarration;
+            resultTextElem.classList.remove('hidden');
+
+            // 移除所有選項按鈕，並添加一個「繼續」按鈕
+            optionsContainer.innerHTML = '';
+            const nextButton = document.createElement('button');
+            nextButton.classList.add('game-button', 'mt-4');
+            nextButton.textContent = '繼續旅程！';
+            nextButton.onclick = () => {
+                currentScenario++; // 前往下一個情境
+                displayScenario(); // 顯示下一個情境或結束遊戲
+            };
+            optionsContainer.appendChild(nextButton);
+        }
+
+        // 遊戲結束
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            resultTextElem.classList.add('hidden'); // 確保結果文字隱藏
+
+            let endMessage = '';
+            if (money >= 3000 && mood >= 70) {
+                endMessage = '結局1：墾丁CP值達人（兼業者剋星）\n恭喜你！你成功避開了墾丁的「盤子陷阱」，用最划算的價格，享受了一趟愉快的旅程。你證明了，只要選擇得當，墾丁也能玩出高CP值！業者看到你的帳單，可能會氣到睡不著覺，但你卻笑到在夢裡數錢！';
+            } else if (money >= 1500 && money < 3000 && mood >= 40 && mood < 70) {
+                endMessage = '結局2：小資精省遊客（偶爾當盤子）\n你努力在預算和體驗之間取得平衡，雖然有些地方可能略有不足，甚至不小心當了一兩次盤子，但整體來說，這趟旅程還算及格。你學到了教訓，下次可以再大膽一點（或再精打細算一點），畢竟「吃虧就是佔便宜」嘛！';
+            } else if (money < 1500 && mood < 40) {
+                endMessage = '結局3：無奈盤子體驗（含淚吞下）\n噢不！你似乎不小心踩了不少地雷，花了不少冤枉錢，心情也大受影響。這趟墾丁之旅，可能讓你對國旅又有了新的「負面印象」，甚至開始懷疑人生。你現在只想趕快回家，抱著你的存摺痛哭一場，然後發誓再也不來墾丁了！';
+            } else if (money >= 4000 && mood >= 40 && mood < 60) {
+                endMessage = '結局4：佛系放空者（錢包君的守護神）\n你幾乎沒花什麼錢，但也沒體驗到什麼特別的活動。或許對你來說，放空就是最好的旅行方式。你證明了，只要心靜，哪裡都是天堂。下次可以考慮直接在家裡放空，CP值會更高喔！畢竟「沙發才是你最好的朋友」！';
+            } else {
+                endMessage = '你的結局太特別了，連遊戲都不知道該怎麼分類你！恭喜你達成了「意想不到的旅程」！';
+            }
+
+            endMessageElem.textContent = endMessage;
+            finalStatsElem.textContent = `最終金錢：${money}元，最終心情值：${mood}`;
+        }
+
+        // 開始新遊戲
+        function startGame() {
+            money = 5000;
+            mood = 50;
+            currentScenario = 0;
+            updateStats();
+
+            introScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            displayScenario(); // 顯示第一個情境
+        }
+
+        // 事件監聽器
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        // 初始化遊戲狀態顯示
+        updateStats();
+    </script>
+</body>
+</html>
